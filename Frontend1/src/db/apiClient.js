@@ -19,11 +19,14 @@ export const removeToken = () => {
 const apiClient = async (endpoint, options = {}) => {
   const token = getToken();
   
-  // Debugging: Log the token to ensure it's being retrieved
-  console.log('Token retrieved from localStorage:', token);
+  console.log('=== API Client Call ===');
+  console.log('Endpoint:', `${API_URL}${endpoint}`);
+  console.log('Method:', options.method || 'GET');
+  console.log('Token:', token ? 'Present' : 'Missing');
+  console.log('Body:', options.body);
 
   const config = {
-    ...options,
+    method: options.method || 'GET',
     headers: {
       'Content-Type': 'application/json',
       ...(token && { Authorization: `Bearer ${token}` }),
@@ -31,18 +34,29 @@ const apiClient = async (endpoint, options = {}) => {
     },
   };
 
+  // ✅ Stringify body if it exists
+  if (options.body) {
+    config.body = JSON.stringify(options.body);
+    console.log('Stringified body:', config.body);
+  }
+
   try {
     const response = await fetch(`${API_URL}${endpoint}`, config);
+    console.log('Response status:', response.status);
+    
     const data = await response.json();
+    console.log('Response data:', data);
 
     if (!response.ok) {
-      console.error('API Response Error:', data); // Log the full response for debugging
+      console.error('API Response Error:', data);
       throw new Error(data.error || 'Something went wrong');
     }
 
+    console.log('=== API Call Success ===');
     return { data, error: null };
   } catch (error) {
-    console.error('API Client Error:', error.message); // Log the error for debugging
+    console.error('=== API Client Error ===');
+    console.error('Error message:', error.message);
     return { data: null, error: error.message };
   }
 };

@@ -103,39 +103,39 @@ export function CreateLink() {
         </Button>
       </DialogTrigger>
 
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-md bg-white rounded-none">
         <DialogHeader>
           <DialogTitle className="font-bold text-2xl">Create New</DialogTitle>
         </DialogHeader>
 
-        {/* Title */}
         <Input
           id="title"
-          placeholder="Short Link's Title"
+          placeholder="Short Link Title"
           value={formValues.title}
           onChange={handleChange}
-        />
+          className="bg-white text-black border-2 border-gray-400 rounded-none px-3 py-2 focus:border-black focus:ring-1 focus:ring-black outline-none transition"
+          />
         {errors.title && <Error message={errors.title} />}
 
-        {/* Long URL */}
         <Input
           id="longUrl"
-          placeholder="Enter your Loooong URL"
+          placeholder="Enter your Long URL"
           value={formValues.longUrl}
           onChange={handleChange}
-        />
+          className="bg-white text-black border-2 border-gray-400 rounded-none px-3 py-2 focus:border-black focus:ring-1 focus:ring-black outline-none transition"
+          />
         {errors.longUrl && <Error message={errors.longUrl} />}
 
-        {/* Custom URL */}
         <div className="flex items-center gap-2">
-          <Card className="p-2">trimrr.in</Card> /
-          <Input
-            id="customUrl"
-            placeholder="Custom Link (optional)"
-            value={formValues.customUrl}
-            onChange={handleChange}
-          />
-        </div>
+        <Input
+          id="customUrl"
+          placeholder="Custom Link (optional)"
+          value={formValues.customUrl}
+          onChange={handleChange}
+          className="bg-white text-black border-2 border-gray-400 rounded-none px-3 py-2 focus:border-black focus:ring-1 focus:ring-black outline-none transition"
+        />
+      </div>
+
 
         {/* Errors */}
         {errors.auth && <Error message={errors.auth} />}
@@ -146,6 +146,7 @@ export function CreateLink() {
             type="button"
             variant="destructive"
             onClick={createNewLink}
+            className='bg-[#7f57f1]'
             disabled={loading}
           >
             {loading ? <BeatLoader size={10} color="white" /> : "Create"}

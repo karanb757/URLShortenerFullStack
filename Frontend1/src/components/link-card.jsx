@@ -27,8 +27,8 @@ const LinkCard = ({ url = {}, fetchUrls }) => {
 
   // Determine the display URL
   const displayUrl = url?.custom_url 
-    ? `trimrr.in/${url.custom_url}` 
-    : `trimrr.in/${url.short_url}`;
+    ? `${url.custom_url}` 
+    : `${url.short_url}`;
 
   const copyUrl = url?.custom_url || url?.short_url;
 
@@ -60,7 +60,7 @@ const LinkCard = ({ url = {}, fetchUrls }) => {
         <button
           className="bg-white hover:bg-white"
           onClick={() =>
-            navigator.clipboard.writeText(`https://trimrr.in/${copyUrl}`)
+            navigator.clipboard.writeText(`${copyUrl}`)
           }
         >
           <Copy />

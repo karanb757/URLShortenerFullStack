@@ -9,6 +9,10 @@ export const createShortUrl = async (req, res) => {
     const { title, longUrl, customUrl } = req.body;
     const userId = req.user._id;
 
+    console.log('=== CREATE SHORT URL ===');
+    console.log('Request body:', req.body);
+    console.log('User ID:', userId);
+
     // Validate longUrl
     if (!longUrl) {
       return res.status(400).json({ error: 'Long URL is required' });
@@ -16,6 +20,7 @@ export const createShortUrl = async (req, res) => {
 
     // Generate short code
     const shortCode = customUrl || nanoid(8);
+    console.log('Generated short code:', shortCode);
 
     // Check if custom URL already exists
     if (customUrl) {
@@ -28,7 +33,9 @@ export const createShortUrl = async (req, res) => {
     }
 
     // Generate QR code as base64
-    const shortUrlFull = `${process.env.APP_URL}${shortCode}`;
+    const shortUrlFull = `${process.env.APP_URL || 'http://localhost:3000'}/${shortCode}`;
+    console.log('Full short URL:', shortUrlFull);
+    
     const qrDataUrl = await QRCode.toDataURL(shortUrlFull);
 
     // Create short URL document
@@ -45,8 +52,9 @@ export const createShortUrl = async (req, res) => {
     });
 
     await newUrl.save();
+    console.log('URL saved to database:', newUrl._id);
 
-    res.status(201).json({
+    const responseData = {
       id: newUrl._id,
       title: newUrl.title,
       original_url: newUrl.original_url,
@@ -55,7 +63,10 @@ export const createShortUrl = async (req, res) => {
       qr: newUrl.qr,
       clicks: newUrl.clicks,
       created_at: newUrl.created_at,
-    });
+    };
+
+    console.log('Sending response:', responseData);
+    res.status(201).json(responseData);
   } catch (error) {
     console.error('Create short URL error:', error);
     res.status(500).json({ error: error.message });

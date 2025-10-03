@@ -73,21 +73,22 @@ const LinkPage = () => {
 
   return (
     <>
-      {(loading || loadingStats) && (
+      {/* {(loading || loadingStats) && (
         <BarLoader className="mb-4" width={"100%"} color="#36d7b7" />
-      )}
+      )} */}
+
       <div className="flex flex-col gap-4 sm:flex-row justify-between pl-10 pt-8">
         <div className="flex flex-col items-start gap-8 rounded-lg sm:w-2/5">
           <span className="text-4xl font-extrabold cursor-pointer">
             {url?.title}
           </span>
           <a
-            href={`https://trimrr.in/${link}`}
+            href={`${link}`}
             target="_blank"
             rel="noopener noreferrer"
             className="text-3xl sm:text-4xl text-blue-400 font-bold cursor-pointer"
           >
-            https://trimrr.in/{link}
+            {link}
           </a>
           <a
             href={url?.original_url}
@@ -106,7 +107,7 @@ const LinkPage = () => {
             <Button
               className="bg-white hover:bg-white hover:border-2 w-10 h-10 flex items-center justify-center"
               onClick={() =>
-                navigator.clipboard.writeText(`https://trimrr.in/${link}`)
+                navigator.clipboard.writeText(`${link}`)
               }
             >
               <Copy />

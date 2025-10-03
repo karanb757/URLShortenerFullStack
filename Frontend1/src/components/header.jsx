@@ -29,7 +29,13 @@ const Header = () => {
         </Link>
         <div className="flex gap-4">
           {!user ? (
-            <Button onClick={() => navigate("/auth")}>Login</Button>
+            <Button 
+            onClick={() => navigate("/auth")}
+            className='bg-[#7f57f1] text-white hover:bg-[#6d48d4]'
+            variant='desctructive'
+            >
+              Login
+            </Button>
           ) : (
             <DropdownMenu className='bg-white text-black'>
               <DropdownMenuTrigger className="w-12 h-12 rounded-full overflow-hidden">
