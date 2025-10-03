@@ -77,13 +77,12 @@ const Dashboard = () => {
       </div>
       
       <div className="relative">
-        <Input
-          type="text"
-          placeholder="Filter Links..."
-          className="bg-white"
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-        />
+      <Input
+      type="text"
+      placeholder="Filter Links..."
+      textColor="text-black"
+      className="bg-white border-2 border-black"
+    />
         <Filter className="absolute top-2 right-2 p-1" />
       </div>
       

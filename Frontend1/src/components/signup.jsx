@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import Error from "./error";
 import { Input } from "./ui/input";
 import * as Yup from "yup";
@@ -23,6 +23,7 @@ const Signup = () => {
 
   const navigate = useNavigate();
   const { fetchUser } = UrlState();
+  const hasNavigated = useRef(false); // ✅ Prevent multiple navigations
 
   const [errors, setErrors] = useState({});
   const [formData, setFormData] = useState({
@@ -60,15 +61,19 @@ const Signup = () => {
 
   const { loading, error, fn: fnSignup, data } = useFetch(signup, formData);
 
+  // ✅ Fixed: Remove fetchUser from dependencies and use ref
   useEffect(() => {
-    if (error === null && data) {
+    if (error === null && data && !hasNavigated.current) {
+      hasNavigated.current = true;
       fetchUser();
       navigate(`/dashboard?${longLink ? `createNew=${longLink}` : ""}`);
     }
-  }, [error, data, navigate, longLink, fetchUser]);
+  }, [error, data, navigate, longLink]); // Removed fetchUser
 
   const handleSignup = async () => {
     setErrors([]);
+    hasNavigated.current = false; // ✅ Reset on new signup attempt
+    
     try {
       const schema = Yup.object().shape({
         name: Yup.string().required("Name is required"),
@@ -111,6 +116,7 @@ const Signup = () => {
             name="name"
             type="text"
             placeholder="Enter Name"
+            className='border-2 border-black rounded-md'
             onChange={handleInputChange}
           />
         </div>
@@ -121,16 +127,18 @@ const Signup = () => {
             name="email"
             type="email"
             placeholder="Enter Email"
+            className='border-2 border-black rounded-md'
             onChange={handleInputChange}
           />
         </div>
         {errors.email && <Error message={errors.email} />}
         
-        <div className="space-y-1">
+        <div className="space-y-1 pb-4">
           <Input
             name="password"
             type="password"
             placeholder="Enter Password"
+            className='border-2 border-black rounded-md'
             onChange={handleInputChange}
           />
         </div>
@@ -147,13 +155,11 @@ const Signup = () => {
         {errors.profile_pic && <Error message={errors.profile_pic} />}
       </CardContent>
       <CardFooter>
-        <Button onClick={handleSignup} disabled={loading}>
-          {loading ? (
-            <BeatLoader size={10} color="#36d7b7" />
-          ) : (
-            "Create Account"
-          )}
+        <div className="border-2 border-black rounded-md scale-90 ">
+        <Button onClick={handleSignup}>
+        Create Account
         </Button>
+        </div>
       </CardFooter>
     </Card>
   );

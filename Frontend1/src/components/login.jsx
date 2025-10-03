@@ -9,7 +9,7 @@ import {
 } from "./ui/card";
 import { Button } from "./ui/button";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import * as Yup from "yup";
 import Error from "./error";
 import { login } from "@/db/apiAuth";
@@ -22,6 +22,7 @@ const Login = () => {
   const longLink = searchParams.get("createNew");
 
   const navigate = useNavigate();
+  const hasNavigated = useRef(false); // ✅ Prevent multiple navigations
 
   const [errors, setErrors] = useState({});
   const [formData, setFormData] = useState({
@@ -40,15 +41,19 @@ const Login = () => {
   const { loading, error, fn: fnLogin, data } = useFetch(login, formData);
   const { fetchUser } = UrlState();
 
+  // ✅ Fixed: Remove fetchUser from dependencies and use ref to prevent multiple navigations
   useEffect(() => {
-    if (error === null && data) {
+    if (error === null && data && !hasNavigated.current) {
+      hasNavigated.current = true;
       fetchUser();
       navigate(`/dashboard?${longLink ? `createNew=${longLink}` : ""}`);
     }
-  }, [error, data, navigate, longLink, fetchUser]);
+  }, [error, data, navigate, longLink]); // Removed fetchUser
 
   const handleLogin = async () => {
     setErrors([]);
+    hasNavigated.current = false; // ✅ Reset on new login attempt
+    
     try {
       const schema = Yup.object().shape({
         email: Yup.string()
@@ -81,8 +86,8 @@ const Login = () => {
         </CardDescription>
         {error && <Error message={error} />}
       </CardHeader>
-      <CardContent className="space-y-2">
-        <div className="space-y-1">
+      <CardContent className="space-y-2 bg-white">
+        <div className="space-y-1 border-2 border-black rounded-md">
           <Input
             name="email"
             type="email"
@@ -92,7 +97,7 @@ const Login = () => {
         </div>
         {errors.email && <Error message={errors.email} />}
         
-        <div className="space-y-1">
+        <div className="space-y-1 border-2 border-black rounded-md">
           <Input
             name="password"
             type="password"

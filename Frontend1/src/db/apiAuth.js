@@ -2,9 +2,10 @@ import apiClient, { setToken, removeToken } from './apiClient';
 
 // Signup
 export const signup = async ({ email, password, name, profile_pic }) => {
+  // Pass object directly - apiClient will stringify it
   const { data, error } = await apiClient('/auth/signup', {
     method: 'POST',
-    body: JSON.stringify({ email, password, name, profile_pic }),
+    body: { email, password, name, profile_pic },
   });
 
   if (error) {
@@ -25,9 +26,10 @@ export const signup = async ({ email, password, name, profile_pic }) => {
 
 // Login
 export const login = async ({ email, password }) => {
+  // Pass object directly - apiClient will stringify it
   const { data, error } = await apiClient('/auth/login', {
     method: 'POST',
-    body: JSON.stringify({ email, password }),
+    body: { email, password },
   });
 
   if (error) {
@@ -62,7 +64,7 @@ export const getCurrentUser = async () => {
 
   if (error) {
     if (error.includes('Unauthorized')) {
-      removeToken(); // clear invalid token
+      removeToken();
     }
     return { data: { user: null }, error, loading: false };
   }

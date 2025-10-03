@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect } from "react";
+import { createContext, useContext, useEffect, useCallback } from "react";
 import { getCurrentUser } from "./db/apiAuth";
 import useFetch from "./hooks/use-fetch";
 
@@ -11,12 +11,17 @@ const UrlProvider = ({ children }) => {
   const user = userData?.data?.user || userData?.user || null;
   const isAuthenticated = !!user?.id || !!localStorage.getItem('token');
 
+  // ✅ Wrap fetchUser in useCallback to prevent it from changing on every render
+  const stableFetchUser = useCallback(() => {
+    return fetchUser();
+  }, [fetchUser]);
+
   useEffect(() => {
-    fetchUser();
+    stableFetchUser();
   }, []);
 
   useEffect(() => {
-    fetchUser().then(res => {
+    stableFetchUser().then(res => {
       if (!res?.data?.user && !res?.data?.data?.user) {
         localStorage.removeItem('token'); // Clear localStorage if API fails
       }
@@ -24,7 +29,12 @@ const UrlProvider = ({ children }) => {
   }, []);
 
   return (
-    <UrlContext.Provider value={{ user, fetchUser, loading, isAuthenticated }}>
+    <UrlContext.Provider value={{ 
+      user, 
+      fetchUser: stableFetchUser, // ✅ Use stable version
+      loading, 
+      isAuthenticated 
+    }}>
       {children}
     </UrlContext.Provider>
   );
