@@ -1,4 +1,4 @@
-import {Button} from "@/components/ui/button";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -7,24 +7,22 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import {Input} from "@/components/ui/input";
-import {Card} from "./ui/card";
-import {useNavigate, useSearchParams} from "react-router-dom";
-import {useEffect, useRef, useState} from "react";
+import { Input } from "@/components/ui/input";
+import { Card } from "./ui/card";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { useEffect, useState } from "react";
 import Error from "./error";
 import * as yup from "yup";
 import useFetch from "@/hooks/use-fetch";
-import {createUrl} from "@/db/apiUrls";
-import {BeatLoader} from "react-spinners";
-import {UrlState} from "@/context";
-import {QRCode} from "react-qrcode-logo";
+import { createUrl } from "@/db/apiUrls";
+import { BeatLoader } from "react-spinners";
+import { UrlState } from "@/context";
 
 export function CreateLink() {
-  const {user} = UrlState();
+  const { user } = UrlState();
+  const userId = user?.user?.id; // ✅ correct optional chaining
 
   const navigate = useNavigate();
-  const ref = useRef();
-
   let [searchParams, setSearchParams] = useSearchParams();
   const longLink = searchParams.get("createNew");
 
@@ -35,6 +33,7 @@ export function CreateLink() {
     customUrl: "",
   });
 
+  // Validation schema
   const schema = yup.object().shape({
     title: yup.string().required("Title is required"),
     longUrl: yup
@@ -56,31 +55,34 @@ export function CreateLink() {
     error,
     data,
     fn: fnCreateUrl,
-  } = useFetch(createUrl, {...formValues, user_id: user.id});
+  } = useFetch(createUrl, { ...formValues, user_id: userId }); // ✅ safe userId
 
+  // Navigate after creating link
   useEffect(() => {
     if (error === null && data) {
-      navigate(`/link/${data[0].id}`);
+      // data could be object or array, so check
+      const linkId = Array.isArray(data) ? data[0]?.id : data?.id;
+      if (linkId) {
+        navigate(`/link/${linkId}`);
+      }
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [error, data]);
+  }, [error, data, navigate]);
 
   const createNewLink = async () => {
-    setErrors([]);
+    setErrors({});
+    if (!userId) {
+      setErrors({ auth: "You must be logged in to create a link." });
+      return;
+    }
+
     try {
-      await schema.validate(formValues, {abortEarly: false});
-
-      const canvas = ref.current.canvasRef.current;
-      const blob = await new Promise((resolve) => canvas.toBlob(resolve));
-
-      await fnCreateUrl(blob);
+      await schema.validate(formValues, { abortEarly: false });
+      await fnCreateUrl();
     } catch (e) {
       const newErrors = {};
-
       e?.inner?.forEach((err) => {
         newErrors[err.path] = err.message;
       });
-
       setErrors(newErrors);
     }
   };
@@ -93,16 +95,17 @@ export function CreateLink() {
       }}
     >
       <DialogTrigger asChild>
-        <Button className='bg-[#7f57f1]' variant='destructive'>Create New Link</Button>
+        <Button className="bg-[#7f57f1]" variant="destructive">
+          Create New Link
+        </Button>
       </DialogTrigger>
+
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="font-bold text-2xl">Create New</DialogTitle>
         </DialogHeader>
-        {formValues?.longUrl && (
-          <QRCode ref={ref} size={250} value={formValues?.longUrl} />
-        )}
 
+        {/* Title */}
         <Input
           id="title"
           placeholder="Short Link's Title"
@@ -110,6 +113,8 @@ export function CreateLink() {
           onChange={handleChange}
         />
         {errors.title && <Error message={errors.title} />}
+
+        {/* Long URL */}
         <Input
           id="longUrl"
           placeholder="Enter your Loooong URL"
@@ -117,6 +122,8 @@ export function CreateLink() {
           onChange={handleChange}
         />
         {errors.longUrl && <Error message={errors.longUrl} />}
+
+        {/* Custom URL */}
         <div className="flex items-center gap-2">
           <Card className="p-2">trimrr.in</Card> /
           <Input
@@ -126,7 +133,11 @@ export function CreateLink() {
             onChange={handleChange}
           />
         </div>
-        {error && <Error message={errors.message} />}
+
+        {/* Errors */}
+        {errors.auth && <Error message={errors.auth} />}
+        {error && <Error message={error} />}
+
         <DialogFooter className="sm:justify-start">
           <Button
             type="button"

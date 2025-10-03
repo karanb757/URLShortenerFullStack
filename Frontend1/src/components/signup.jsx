@@ -1,6 +1,6 @@
-import {useEffect, useState} from "react";
+import { useEffect, useState } from "react";
 import Error from "./error";
-import {Input} from "./ui/input";
+import { Input } from "./ui/input";
 import * as Yup from "yup";
 import {
   Card,
@@ -10,17 +10,19 @@ import {
   CardHeader,
   CardTitle,
 } from "./ui/card";
-import {Button} from "./ui/button";
-import {useNavigate, useSearchParams} from "react-router-dom";
-import {signup} from "@/db/apiAuth";
-import {BeatLoader} from "react-spinners";
+import { Button } from "./ui/button";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { signup } from "@/db/apiAuth";
+import { BeatLoader } from "react-spinners";
 import useFetch from "@/hooks/use-fetch";
+import { UrlState } from "@/context";
 
 const Signup = () => {
   let [searchParams] = useSearchParams();
   const longLink = searchParams.get("createNew");
 
   const navigate = useNavigate();
+  const { fetchUser } = UrlState();
 
   const [errors, setErrors] = useState({});
   const [formData, setFormData] = useState({
@@ -31,21 +33,39 @@ const Signup = () => {
   });
 
   const handleInputChange = (e) => {
-    const {name, value, files} = e.target;
-    setFormData((prevState) => ({
-      ...prevState,
-      [name]: files ? files[0] : value,
-    }));
+    const { name, value, files } = e.target;
+    
+    if (files) {
+      // Convert image to base64
+      const file = files[0];
+      const reader = new FileReader();
+      
+      reader.onloadend = () => {
+        setFormData((prevState) => ({
+          ...prevState,
+          [name]: reader.result, // base64 string
+        }));
+      };
+      
+      if (file) {
+        reader.readAsDataURL(file);
+      }
+    } else {
+      setFormData((prevState) => ({
+        ...prevState,
+        [name]: value,
+      }));
+    }
   };
 
-  const {loading, error, fn: fnSignup, data} = useFetch(signup, formData);
+  const { loading, error, fn: fnSignup, data } = useFetch(signup, formData);
 
   useEffect(() => {
     if (error === null && data) {
+      fetchUser();
       navigate(`/dashboard?${longLink ? `createNew=${longLink}` : ""}`);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [error, loading]);
+  }, [error, data, navigate, longLink, fetchUser]);
 
   const handleSignup = async () => {
     setErrors([]);
@@ -61,7 +81,7 @@ const Signup = () => {
         profile_pic: Yup.mixed().required("Profile picture is required"),
       });
 
-      await schema.validate(formData, {abortEarly: false});
+      await schema.validate(formData, { abortEarly: false });
       await fnSignup();
     } catch (error) {
       const newErrors = {};
@@ -69,10 +89,9 @@ const Signup = () => {
         error.inner.forEach((err) => {
           newErrors[err.path] = err.message;
         });
-
         setErrors(newErrors);
       } else {
-        setErrors({api: error.message});
+        setErrors({ api: error.message });
       }
     }
   };
@@ -84,7 +103,7 @@ const Signup = () => {
         <CardDescription>
           Create a new account if you haven&rsquo;t already
         </CardDescription>
-        {error && <Error message={error?.message} />}
+        {error && <Error message={error} />}
       </CardHeader>
       <CardContent className="space-y-2">
         <div className="space-y-1">
@@ -96,6 +115,7 @@ const Signup = () => {
           />
         </div>
         {errors.name && <Error message={errors.name} />}
+        
         <div className="space-y-1">
           <Input
             name="email"
@@ -105,6 +125,7 @@ const Signup = () => {
           />
         </div>
         {errors.email && <Error message={errors.email} />}
+        
         <div className="space-y-1">
           <Input
             name="password"
@@ -114,6 +135,7 @@ const Signup = () => {
           />
         </div>
         {errors.password && <Error message={errors.password} />}
+        
         <div className="space-y-1">
           <input
             name="profile_pic"
@@ -125,7 +147,7 @@ const Signup = () => {
         {errors.profile_pic && <Error message={errors.profile_pic} />}
       </CardContent>
       <CardFooter>
-        <Button onClick={handleSignup}>
+        <Button onClick={handleSignup} disabled={loading}>
           {loading ? (
             <BeatLoader size={10} color="#36d7b7" />
           ) : (

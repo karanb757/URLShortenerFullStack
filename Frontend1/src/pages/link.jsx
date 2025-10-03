@@ -1,20 +1,20 @@
 import DeviceStats from "@/components/device-stats";
 import Location from "@/components/location-stats";
-import {Button} from "@/components/ui/button";
-import {Card, CardContent, CardHeader, CardTitle} from "@/components/ui/card";
-import {UrlState} from "@/context";
-import {getClicksForUrl} from "@/db/apiClicks";
-import {deleteUrl, getUrl} from "@/db/apiUrls";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { UrlState } from "@/context";
+import { getClicksForUrl } from "@/db/apiClicks";
+import { deleteUrl, getUrl } from "@/db/apiUrls";
 import useFetch from "@/hooks/use-fetch";
-import {Copy, Download, LinkIcon, Trash} from "lucide-react";
-import {useEffect} from "react";
-import {useNavigate, useParams} from "react-router-dom";
-import {BarLoader, BeatLoader} from "react-spinners";
+import { Copy, Download, LinkIcon, Trash } from "lucide-react";
+import { useEffect } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import { BarLoader } from "react-spinners";
 
 const LinkPage = () => {
   const downloadImage = () => {
     const imageUrl = url?.qr;
-    const fileName = url?.title;
+    const fileName = url?.title || "qr-code";
 
     // Create an anchor element
     const anchor = document.createElement("a");
@@ -30,15 +30,19 @@ const LinkPage = () => {
     // Remove the anchor from the document
     document.body.removeChild(anchor);
   };
+
   const navigate = useNavigate();
-  const {user} = UrlState();
-  const {id} = useParams();
+  const { user } = UrlState();
+  const { id } = useParams();
+
   const {
     loading,
-    data: url,
+    data: urlData,
     fn,
     error,
-  } = useFetch(getUrl, {id, user_id: user?.id});
+  } = useFetch(getUrl, id);
+
+  const url = urlData?.[0];
 
   const {
     loading: loadingStats,
@@ -46,15 +50,17 @@ const LinkPage = () => {
     fn: fnStats,
   } = useFetch(getClicksForUrl, id);
 
-  const {loading: loadingDelete, fn: fnDelete} = useFetch(deleteUrl, id);
+  const { loading: loadingDelete, fn: fnDelete } = useFetch(deleteUrl, id);
 
   useEffect(() => {
     fn();
   }, []);
 
   useEffect(() => {
-    if (!error && loading === false) fnStats();
-  }, [loading, error]);
+    if (!error && loading === false && url) {
+      fnStats();
+    }
+  }, [loading, error, url]);
 
   if (error) {
     navigate("/dashboard");
@@ -78,6 +84,7 @@ const LinkPage = () => {
           <a
             href={`https://trimrr.in/${link}`}
             target="_blank"
+            rel="noopener noreferrer"
             className="text-3xl sm:text-4xl text-blue-400 font-bold cursor-pointer"
           >
             https://trimrr.in/{link}
@@ -85,45 +92,47 @@ const LinkPage = () => {
           <a
             href={url?.original_url}
             target="_blank"
+            rel="noopener noreferrer"
             className="flex items-center gap-1 hover:underline cursor-pointer"
           >
             <LinkIcon className="p-1" />
             {url?.original_url}
           </a>
           <span className="flex items-end font-extralight text-sm">
-            {new Date(url?.created_at).toLocaleString()}
+            {url?.created_at && new Date(url.created_at).toLocaleString()}
           </span>
 
           <div className="flex gap-2">
-          <Button
-          className="bg-white hover:bg-white hover:border-2 w-10 h-10 flex items-center justify-center"
-          onClick={() =>
-            navigator.clipboard.writeText(`https://trimrr.in/${link}`)
-          }
-          >
-          <Copy />
-          </Button>
+            <Button
+              className="bg-white hover:bg-white hover:border-2 w-10 h-10 flex items-center justify-center"
+              onClick={() =>
+                navigator.clipboard.writeText(`https://trimrr.in/${link}`)
+              }
+            >
+              <Copy />
+            </Button>
 
-          <Button 
-          className="bg-white hover:bg-white hover:border-2 w-10 h-10 flex items-center justify-center"
-          variant="ghost" 
-          onClick={downloadImage}
-          >
-          <Download />
-          </Button>
+            <Button
+              className="bg-white hover:bg-white hover:border-2 w-10 h-10 flex items-center justify-center"
+              variant="ghost"
+              onClick={downloadImage}
+            >
+              <Download />
+            </Button>
 
-          <Button
-          className="bg-white hover:bg-white hover:border-2 w-10 h-10 flex items-center justify-center"
-          onClick={() =>
-            fnDelete().then(() => {
-              navigate("/dashboard");
-            })
-          }
-          >
-          <Trash />
-          </Button>
+            <Button
+              className="bg-white hover:bg-white hover:border-2 w-10 h-10 flex items-center justify-center"
+              onClick={() =>
+                fnDelete().then(() => {
+                  navigate("/dashboard");
+                })
+              }
+              disabled={loadingDelete}
+            >
+              <Trash />
+            </Button>
           </div>
-          
+
           <img
             src={url?.qr}
             className="w-full self-center sm:self-start ring ring-blue-500 p-1 object-contain"

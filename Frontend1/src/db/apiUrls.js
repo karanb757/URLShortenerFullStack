@@ -1,91 +1,95 @@
-import supabase, {supabaseUrl} from "./supabase";
+import apiClient from './apiClient';
 
-export async function getUrls(user_id) {
-  let {data, error} = await supabase
-    .from("urls")
-    .select("*")
-    .eq("user_id", user_id);
+const APP_URL = import.meta.env.VITE_APP_URL || 'http://localhost:3000';
 
-  if (error) {
-    console.error(error);
-    throw new Error("Unable to load URLs");
-  }
-
-  return data;
-}
-
-export async function getUrl({id, user_id}) {
-  const {data, error} = await supabase
-    .from("urls")
-    .select("*")
-    .eq("id", id)
-    .eq("user_id", user_id)
-    .single();
+// Create short URL
+export const createUrl = async ({ title, longUrl, customUrl, user_id }) => {
+  const { data, error } = await apiClient('/urls', {
+    method: 'POST',
+    body: JSON.stringify({ 
+      title, 
+      longUrl, 
+      customUrl: customUrl || null 
+    }),
+  });
 
   if (error) {
-    console.error(error);
-    throw new Error("Short Url not found");
+    return { data: null, error };
   }
 
-  return data;
-}
+  // Format response to match frontend expectations
+  return { 
+    data: [{
+      ...data,
+      short_url: `${APP_URL}/${data.short_url}`,
+    }], 
+    error: null 
+  };
+};
 
-export async function getLongUrl(id) {
-  let {data: shortLinkData, error: shortLinkError} = await supabase
-    .from("urls")
-    .select("id, original_url")
-    .or(`short_url.eq.${id},custom_url.eq.${id}`)
-    .single();
-
-  if (shortLinkError && shortLinkError.code !== "PGRST116") {
-    console.error("Error fetching short link:", shortLinkError);
-    return;
-  }
-
-  return shortLinkData;
-}
-
-export async function createUrl({title, longUrl, customUrl, user_id}, qrcode) {
-  const short_url = Math.random().toString(36).substr(2, 6);
-  const fileName = `qr-${short_url}`;
-
-  const {error: storageError} = await supabase.storage
-    .from("qrs")
-    .upload(fileName, qrcode);
-
-  if (storageError) throw new Error(storageError.message);
-
-  const qr = `${supabaseUrl}/storage/v1/object/public/qrs/${fileName}`;
-
-  const {data, error} = await supabase
-    .from("urls")
-    .insert([
-      {
-        title,
-        user_id,
-        original_url: longUrl,
-        custom_url: customUrl || null,
-        short_url,
-        qr,
-      },
-    ])
-    .select();
+// Get all URLs for user
+export const getUrls = async (user_id) => {
+  const { data, error } = await apiClient('/urls', {
+    method: 'GET',
+  });
 
   if (error) {
-    console.error(error);
-    throw new Error("Error creating short URL");
+    return { data: null, error };
   }
 
-  return data;
-}
+  // Format URLs with full path
+  const formattedUrls = data.map(url => ({
+    ...url,
+    short_url: `${APP_URL}/${url.short_url}`,
+  }));
 
-export async function deleteUrl(id) {
-  const {data, error} = await supabase.from("urls").delete().eq("id", id);
+  return { data: formattedUrls, error: null };
+};
+
+// Get single URL by ID
+export const getUrl = async (id) => {
+  const { data, error } = await apiClient(`/urls/${id}`, {
+    method: 'GET',
+  });
 
   if (error) {
-    console.error(error);
-    throw new Error("Unable to delete Url");
+    return { data: null, error };
   }
 
-  return data;
-}
+  return { 
+    data: [{
+      ...data,
+      short_url: `${APP_URL}/${data.short_url}`,
+    }], 
+    error: null 
+  };
+};
+
+// Delete URL
+export const deleteUrl = async (id) => {
+  const { data, error } = await apiClient(`/urls/${id}`, {
+    method: 'DELETE',
+  });
+
+  return { data, error };
+};
+
+// Update URL (if needed in future)
+export const updateUrl = async (id, updates) => {
+  const { data, error } = await apiClient(`/urls/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(updates),
+  });
+
+  if (error) {
+    return { data: null, error };
+  }
+
+  return { 
+    data: [{
+      ...data,
+      short_url: `${APP_URL}/${data.short_url}`,
+    }], 
+    error: null 
+  };
+};

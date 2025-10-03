@@ -1,13 +1,12 @@
-/* eslint-disable react/prop-types */
-import {Copy, Download, Trash} from "lucide-react";
-import {Link} from "react-router-dom";
+import { Copy, Download, Trash } from "lucide-react";
+import { Link } from "react-router-dom";
 import useFetch from "@/hooks/use-fetch";
-import {deleteUrl} from "@/db/apiUrls";
+import { deleteUrl } from "@/db/apiUrls";
 
-const LinkCard = ({url = [], fetchUrls}) => {
+const LinkCard = ({ url = {}, fetchUrls }) => {
   const downloadImage = () => {
     const imageUrl = url?.qr;
-    const fileName = url?.title; // Desired file name for the downloaded image
+    const fileName = url?.title || "qr-code";
 
     // Create an anchor element
     const anchor = document.createElement("a");
@@ -24,7 +23,14 @@ const LinkCard = ({url = [], fetchUrls}) => {
     document.body.removeChild(anchor);
   };
 
-  const {loading: loadingDelete, fn: fnDelete} = useFetch(deleteUrl, url.id);
+  const { loading: loadingDelete, fn: fnDelete } = useFetch(deleteUrl, url.id);
+
+  // Determine the display URL
+  const displayUrl = url?.custom_url 
+    ? `trimrr.in/${url.custom_url}` 
+    : `trimrr.in/${url.short_url}`;
+
+  const copyUrl = url?.custom_url || url?.short_url;
 
   return (
     <div className="flex flex-col md:flex-row gap-5 border p-4 rounded-lg">
@@ -39,7 +45,7 @@ const LinkCard = ({url = [], fetchUrls}) => {
             {url?.title}
           </span>
           <span className="text-2xl text-[#7f57f1] font-bold hover:underline cursor-pointer">
-            https://trimrr.in/{url?.custom_url ? url?.custom_url : url.short_url}
+            {displayUrl}
           </span>
           <span className="flex items-center gap-1 hover:underline cursor-pointer">
             {url?.original_url}
@@ -54,7 +60,7 @@ const LinkCard = ({url = [], fetchUrls}) => {
         <button
           className="bg-white hover:bg-white"
           onClick={() =>
-            navigator.clipboard.writeText(`https://trimrr.in/${url?.short_url}`)
+            navigator.clipboard.writeText(`https://trimrr.in/${copyUrl}`)
           }
         >
           <Copy />
@@ -64,23 +70,11 @@ const LinkCard = ({url = [], fetchUrls}) => {
           <Download />
         </button>
 
-        {/* <Button
-          onClick={() => fnDelete().then(() => fetchUrls())}
-          className="bg-white hover:bg-white w-10 h-10 flex items-center justify-center p-0"
-          disabled={loadingDelete}
-        >
-          {loadingDelete ? (
-            <BeatLoader size={5} color="gray" />
-          ) : (
-            <Trash className="w-4 h-4" />
-          )}
-        </Button> */}
-
         <button
           onClick={() => fnDelete().then(() => fetchUrls())}
           disabled={loadingDelete}
         >
-          <Trash/>
+          <Trash />
         </button>
       </div>
     </div>

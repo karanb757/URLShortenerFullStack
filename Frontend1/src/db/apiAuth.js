@@ -1,52 +1,82 @@
-import supabase, {supabaseUrl} from "./supabase";
+import apiClient, { setToken, removeToken } from './apiClient';
 
-export async function login({email, password}) {
-  const {data, error} = await supabase.auth.signInWithPassword({
-    email,
-    password,
+// Signup
+export const signup = async ({ email, password, name, profile_pic }) => {
+  const { data, error } = await apiClient('/auth/signup', {
+    method: 'POST',
+    body: JSON.stringify({ email, password, name, profile_pic }),
   });
 
-  if (error) throw new Error(error.message);
+  if (error) {
+    return { data: null, error };
+  }
 
-  return data;
-}
+  // Store token
+  setToken(data.token);
 
-export async function signup({name, email, password, profile_pic}) {
-  const fileName = `dp-${name.split(" ").join("-")}-${Math.random()}`;
+  return { 
+    data: { 
+      user: data.user, 
+      session: { access_token: data.token } 
+    }, 
+    error: null 
+  };
+};
 
-  const {error: storageError} = await supabase.storage
-    .from("profile_pic")
-    .upload(fileName, profile_pic);
-
-  if (storageError) throw new Error(storageError.message);
-
-  const {data, error} = await supabase.auth.signUp({
-    email,
-    password,
-    options: {
-      data: {
-        name,
-        profile_pic: `${supabaseUrl}/storage/v1/object/public/profile_pic/${fileName}`,
-      },
-    },
+// Login
+export const login = async ({ email, password }) => {
+  const { data, error } = await apiClient('/auth/login', {
+    method: 'POST',
+    body: JSON.stringify({ email, password }),
   });
 
-  if (error) throw new Error(error.message);
+  if (error) {
+    return { data: null, error };
+  }
 
-  return data;
-}
+  // Store token
+  setToken(data.token);
 
-export async function getCurrentUser() {
-  const {data: session, error} = await supabase.auth.getSession();
-  if (!session.session) return null;
+  return { 
+    data: { 
+      user: data.user, 
+      session: { access_token: data.token } 
+    }, 
+    error: null 
+  };
+};
 
-  // const {data, error} = await supabase.auth.getUser();
+// Get current user
+export const getCurrentUser = async () => {
+  const token = localStorage.getItem('token');
+  if (!token) {
+    return { data: { user: null }, error: 'No token found', loading: false };
+  }
 
-  if (error) throw new Error(error.message);
-  return session.session?.user;
-}
+  const { data, error } = await apiClient('/auth/me', {
+    method: 'GET',
+    headers: {
+      'Authorization': `Bearer ${token}`
+    }
+  });
 
-export async function logout() {
-  const {error} = await supabase.auth.signOut();
-  if (error) throw new Error(error.message);
-}
+  if (error) {
+    if (error.includes('Unauthorized')) {
+      removeToken(); // clear invalid token
+    }
+    return { data: { user: null }, error, loading: false };
+  }
+
+  return { data: { user: data }, error: null, loading: false };
+};
+
+// Logout
+export const logout = async () => {
+  removeToken();
+  return { error: null };
+};
+
+// Check if user is authenticated
+export const isAuthenticated = () => {
+  return !!localStorage.getItem('token');
+};
