@@ -31,18 +31,17 @@ const Header = () => {
           {!user ? (
             <Button onClick={() => navigate("/auth")}>Login</Button>
           ) : (
-            <DropdownMenu>
+            <DropdownMenu className='bg-white text-black'>
               <DropdownMenuTrigger className="w-12 h-12 rounded-full overflow-hidden">
                 <Avatar>
-                  <AvatarImage src={user?.user_metadata?.profile_pic} />
+                  <AvatarImage src={user?.user_metadata?.profile_pic}/>
                   <AvatarFallback>PA</AvatarFallback>
                 </Avatar>
               </DropdownMenuTrigger>
-              <DropdownMenuContent>
+              <DropdownMenuContent >
                 <DropdownMenuLabel>
                   {user?.user_metadata?.name}
                 </DropdownMenuLabel>
-                <DropdownMenuSeparator />
                 <DropdownMenuItem>
                   <Link to="/dashboard" className="flex">
                     <LinkIcon className="mr-2 h-4 w-4" />
@@ -56,10 +55,10 @@ const Header = () => {
                       navigate("/auth");
                     });
                   }}
-                  className="text-red-400"
+                  className="cursor-pointer"
                 >
                   <LogOut className="mr-2 h-4 w-4" />
-                  <span>Logout</span>
+                  <span >Logout</span>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>

@@ -22,8 +22,8 @@ const shortUrlSchema = new mongoose.Schema({
   custom_url: {
     type: String,
     default: null,
-    sparse: true,
-    unique: true,
+    sparse: true,  // ✅ This allows multiple null values
+    unique: true,  // ✅ But enforces uniqueness for non-null values
   },
   qr: {
     type: String, // Base64 encoded QR code
@@ -56,6 +56,9 @@ shortUrlSchema.pre('save', function(next) {
   }
   next();
 });
+
+// Create sparse index on custom_url (if not already exists)
+shortUrlSchema.index({ custom_url: 1 }, { unique: true, sparse: true });
 
 const ShortUrl = mongoose.model('ShortUrl', shortUrlSchema);
 export default ShortUrl;

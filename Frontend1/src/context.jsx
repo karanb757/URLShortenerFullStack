@@ -5,7 +5,10 @@ import useFetch from "./hooks/use-fetch";
 const UrlContext = createContext();
 
 const UrlProvider = ({ children }) => {
-  const { data: user, loading, fn: fetchUser } = useFetch(getCurrentUser);
+  const { data: userData, loading, fn: fetchUser } = useFetch(getCurrentUser);
+  
+  // Extract the actual user object from the nested structure
+  const user = userData?.data?.user || userData?.user || null;
   const isAuthenticated = !!user?.id || !!localStorage.getItem('token');
 
   useEffect(() => {
@@ -14,7 +17,7 @@ const UrlProvider = ({ children }) => {
 
   useEffect(() => {
     fetchUser().then(res => {
-      if (!res?.data) {
+      if (!res?.data?.user && !res?.data?.data?.user) {
         localStorage.removeItem('token'); // Clear localStorage if API fails
       }
     });

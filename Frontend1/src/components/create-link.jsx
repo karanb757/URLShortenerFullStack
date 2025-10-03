@@ -20,7 +20,8 @@ import { UrlState } from "@/context";
 
 export function CreateLink() {
   const { user } = UrlState();
-  const userId = user?.user?.id; // ✅ correct optional chaining
+  // FIX: Changed from user?.user?.id to user?.id
+  const userId = user?.id;
 
   const navigate = useNavigate();
   let [searchParams, setSearchParams] = useSearchParams();
@@ -55,7 +56,7 @@ export function CreateLink() {
     error,
     data,
     fn: fnCreateUrl,
-  } = useFetch(createUrl, { ...formValues, user_id: userId }); // ✅ safe userId
+  } = useFetch(createUrl, { ...formValues, user_id: userId });
 
   // Navigate after creating link
   useEffect(() => {
@@ -70,6 +71,8 @@ export function CreateLink() {
 
   const createNewLink = async () => {
     setErrors({});
+    
+    // FIX: Better user check
     if (!userId) {
       setErrors({ auth: "You must be logged in to create a link." });
       return;
