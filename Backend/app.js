@@ -22,7 +22,8 @@ connectDB();
 const allowedOrigins = [
   'http://localhost:5173',
   'http://localhost:5174',
-  'https://url-shortener-full-stack-main.vercel.app', // Your frontend URL - NO TRAILING SLASH
+  'https://url-shortener-full-stack-main.vercel.app',
+  'https://url-shortener-full-stack-vert.vercel.app', // ADD THIS LINE
   process.env.FRONTEND_URL,
 ].filter(Boolean);
 
