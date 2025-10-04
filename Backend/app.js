@@ -18,46 +18,32 @@ const PORT = process.env.PORT || 3000;
 // Connect to MongoDB
 connectDB();
 
-// CORS Configuration - FIXED
+// CORS Configuration - Allow all Vercel deployments
 const allowedOrigins = [
   'http://localhost:5173',
   'http://localhost:5174',
-  process.env.FRONTEND_URL,
+  'https://url-shortener-full-stack-9epxhgoks.vercel.app', // Optional - already covered by wildcard
+   process.env.FRONTEND_URL,
 ].filter(Boolean);
-
-app.use(cors({
-  origin: function (origin, callback) {
-    if (!origin) return callback(null, true);
-    
-    // Allow all Vercel preview deployments
-    if (origin.includes('url-shortener-full-stack') && origin.includes('vercel.app')) {
-      return callback(null, true);
-    }
-    
-    if (allowedOrigins.indexOf(origin) !== -1) {
-      callback(null, true);
-    } else {
-      console.log('Blocked by CORS:', origin);
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
-}));
 
 app.use(cors({
   origin: function (origin, callback) {
     // Allow requests with no origin (mobile apps, curl, Postman)
     if (!origin) return callback(null, true);
     
-    if (allowedOrigins.indexOf(origin) !== -1) {
-      callback(null, true);
-    } else {
-      console.log('Blocked by CORS:', origin);
-      console.log('Allowed origins:', allowedOrigins);
-      callback(new Error('Not allowed by CORS'));
+    // Allow all Vercel preview deployments (any URL with your project name)
+    if (origin && origin.includes('url-shortener-full-stack') && origin.includes('vercel.app')) {
+      return callback(null, true);
     }
+    
+    // Allow localhost and explicitly listed origins
+    if (allowedOrigins.indexOf(origin) !== -1) {
+      return callback(null, true);
+    }
+    
+    console.log('Blocked by CORS:', origin);
+    console.log('Allowed origins:', allowedOrigins);
+    callback(new Error('Not allowed by CORS'));
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
@@ -69,7 +55,7 @@ app.set('trust proxy', 1);
 
 // Middleware
 app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true, limit: '10mb' })); // FIXED TYPO
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // Health check - Add this BEFORE other routes
 app.get('/health', (req, res) => {
