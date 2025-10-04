@@ -104,11 +104,8 @@ connectDB();
 // CORS Configuration - Updated for deployment
 const allowedOrigins = [
   'http://localhost:5173',
-  'http://localhost:5174',
-  'http://localhost:5175',
+  'https://url-shortener-full-stack-main.vercel.app/',  // ADD YOUR ACTUAL URL
   process.env.FRONTEND_URL,
-  // Add your deployed frontend URL explicitly
-  'https://your-frontend-domain.com'
 ].filter(Boolean);
 
 app.use(cors({
