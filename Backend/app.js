@@ -104,7 +104,7 @@ connectDB();
 // CORS Configuration - Updated for deployment
 const allowedOrigins = [
   'http://localhost:5173',
-  'https://url-shortener-full-stack-main.vercel.app/',  // ADD YOUR ACTUAL URL
+  'https://url-shortener-full-stack-main.vercel.app',  // Remove trailing slash
   process.env.FRONTEND_URL,
 ].filter(Boolean);
 
@@ -128,7 +128,7 @@ app.set('trust proxy', 1);
 
 // Middleware
 app.use(express.json({ limit: '10mb' }));
-app.use(express.urlUrlencoded({ extended: true, limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // Health check - Add this BEFORE other routes
 app.get('/health', (req, res) => {
