@@ -26,6 +26,8 @@ const allowedOrigins = [
   'https://url-shortener-full-stack-lspr.vercel.app',
   'https://url-shortener-full-stack-main.vercel.app',
   'https://url-shortener-full-stack-vert.vercel.app',
+  'https://www.k07.vercel.app',  // ✅ Added your new domain
+  'https://k07.vercel.app',      // ✅ Also add without 'www' just in case
    process.env.FRONTEND_URL,
 ].filter(Boolean);
 
@@ -35,7 +37,7 @@ app.use(cors({
     if (!origin) return callback(null, true);
     
     // Allow all Vercel preview deployments (any URL with your project name)
-    if (origin && origin.includes('url-shortener-full-stack') && origin.includes('vercel.app')) {
+    if (origin && origin.includes('k07') && origin.includes('vercel.app')) {
       return callback(null, true);
     }
     
