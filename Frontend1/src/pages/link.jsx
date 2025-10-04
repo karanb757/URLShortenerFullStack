@@ -9,7 +9,6 @@ import useFetch from "@/hooks/use-fetch";
 import { Copy, Download, LinkIcon, Trash } from "lucide-react";
 import { useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { BarLoader } from "react-spinners";
 
 const LinkPage = () => {
   const downloadImage = () => {
@@ -78,8 +77,8 @@ const LinkPage = () => {
       )} */}
 
       <div className="flex flex-col gap-4 sm:flex-row justify-between pl-10 pt-8">
-        <div className="flex flex-col items-start gap-8 rounded-lg sm:w-2/5">
-          <span className="text-4xl font-extrabold cursor-pointer">
+        <div className="flex flex-col items-start gap-2 rounded-lg sm:w-2/5">
+          <span className="text-4xl font-extrabold cursor-pointer pt-6">
             {url?.title}
           </span>
           <a
@@ -94,9 +93,8 @@ const LinkPage = () => {
             href={url?.original_url}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center gap-1 hover:underline cursor-pointer"
+            className="flex items-center gap-1 hover:underline cursor-pointer pt-4"
           >
-            <LinkIcon className="p-1" />
             {url?.original_url}
           </a>
           <span className="flex items-end font-extralight text-sm">
@@ -114,7 +112,7 @@ const LinkPage = () => {
             </Button>
 
             <Button
-              className="bg-white hover:bg-white hover:border-2 w-10 h-10 flex items-center justify-center"
+              className="bg-white hover:bg-white hover:border-2 hover:scale-125 w-10 h-10 flex items-center justify-center"
               variant="ghost"
               onClick={downloadImage}
             >
@@ -130,18 +128,18 @@ const LinkPage = () => {
               }
               disabled={loadingDelete}
             >
-              <Trash />
+            <Trash />
             </Button>
           </div>
 
           <img
             src={url?.qr}
-            className="w-full self-center sm:self-start ring ring-blue-500 p-1 object-contain"
+            className="h-60 w-70 self-center sm:self-start ring ring-blue-500 p-1 object-contain"
             alt="qr code"
           />
         </div>
-
-        <Card className="sm:w-3/5 bg-white">
+        
+        <Card className="sm:w-3/5 bg-white pb-20">
           <CardHeader>
             <CardTitle className="text-4xl font-extrabold">Stats</CardTitle>
           </CardHeader>

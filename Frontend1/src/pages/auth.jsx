@@ -11,9 +11,16 @@ function Auth() {
   const {isAuthenticated, loading} = UrlState();
   const longLink = searchParams.get("createNew");
 
+  // useEffect(() => {
+  //   if (isAuthenticated && !loading)
+  //     navigate(`/dashboard?${longLink ? `createNew=${longLink}` : ""}`);
+  // }, [isAuthenticated, loading, navigate]);
+
   useEffect(() => {
-    if (isAuthenticated && !loading)
-      navigate(`/dashboard?${longLink ? `createNew=${longLink}` : ""}`);
+    if (isAuthenticated && !loading) {
+      // Redirect to home page instead of dashboard
+      navigate(`/?${longLink ? `createNew=${longLink}` : ""}`);
+    }
   }, [isAuthenticated, loading, navigate]);
 
   return (

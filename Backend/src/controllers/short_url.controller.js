@@ -63,10 +63,11 @@ export const createShortUrl = async (req, res) => {
     }
 
     let shortCode;
+    let finalCustomUrl = undefined; // IMPORTANT: Use undefined, not null
 
     // Handle custom URL
-    if (customUrl) {
-      const sanitized = sanitizeCustomUrl(customUrl);
+    if (customUrl && customUrl.trim()) {
+      const sanitized = sanitizeCustomUrl(customUrl.trim());
       
       // Validate custom URL
       if (sanitized.length < 3 || sanitized.length > 50) {
@@ -91,6 +92,7 @@ export const createShortUrl = async (req, res) => {
       }
 
       shortCode = sanitized;
+      finalCustomUrl = sanitized; // Set custom_url to the sanitized value
     } else {
       // Generate unique random short code
       let attempts = 0;
@@ -117,20 +119,26 @@ export const createShortUrl = async (req, res) => {
     
     const qrDataUrl = await QRCode.toDataURL(shortUrlFull);
 
-    // Create short URL document
-    const newUrl = new ShortUrl({
+    // Create short URL document - IMPORTANT: Only include custom_url if it exists
+    const urlData = {
       title: title.trim(),
       full_url: longUrl,
       original_url: longUrl,
       short_url: shortCode,
-      custom_url: customUrl ? shortCode : null,
       qr: qrDataUrl,
       clicks: 0,
       user_id: userId,
       created_at: new Date(),
-    });
+    };
 
+    // Only add custom_url if it's defined
+    if (finalCustomUrl) {
+      urlData.custom_url = finalCustomUrl;
+    }
+
+    const newUrl = new ShortUrl(urlData);
     await newUrl.save();
+    
     console.log('URL saved to database:', newUrl._id);
 
     const responseData = {
@@ -138,7 +146,7 @@ export const createShortUrl = async (req, res) => {
       title: newUrl.title,
       original_url: newUrl.original_url,
       short_url: newUrl.short_url,
-      custom_url: newUrl.custom_url,
+      custom_url: newUrl.custom_url || null,
       qr: newUrl.qr,
       clicks: newUrl.clicks,
       created_at: newUrl.created_at,
@@ -149,7 +157,7 @@ export const createShortUrl = async (req, res) => {
   } catch (error) {
     console.error('Create short URL error:', error);
     
-    // Handle duplicate key errors (race condition)
+    // Handle duplicate key errors
     if (error.code === 11000) {
       return res.status(409).json({ 
         error: 'URL code already exists. Please try again.' 
@@ -204,18 +212,42 @@ export const getUrlById = async (req, res) => {
     const { id } = req.params;
     const userId = req.user._id;
 
-    const url = await ShortUrl.findOne({ _id: id, user_id: userId });
+    console.log('=== GET URL BY ID ===');
+    console.log('Looking for ID:', id);
+    console.log('User ID:', userId);
+
+    let url;
+
+    // First, try to find by MongoDB _id
+    if (id.match(/^[0-9a-fA-F]{24}$/)) {
+      url = await ShortUrl.findOne({ _id: id, user_id: userId });
+      console.log('Search by _id result:', url ? 'Found' : 'Not found');
+    }
+
+    // If not found, try by short_url or custom_url
+    if (!url) {
+      url = await ShortUrl.findOne({
+        $or: [
+          { short_url: id, user_id: userId },
+          { custom_url: id, user_id: userId }
+        ]
+      });
+      console.log('Search by short_url/custom_url result:', url ? 'Found' : 'Not found');
+    }
 
     if (!url) {
+      console.log('URL not found');
       return res.status(404).json({ error: 'URL not found' });
     }
+
+    console.log('URL found:', url._id);
 
     res.json({
       id: url._id,
       title: url.title,
       original_url: url.original_url,
       short_url: url.short_url,
-      custom_url: url.custom_url,
+      custom_url: url.custom_url || null,
       qr: url.qr,
       clicks: url.clicks,
       created_at: url.created_at,

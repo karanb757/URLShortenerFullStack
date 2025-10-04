@@ -28,6 +28,11 @@ const Header = () => {
           <img src="/www-click.png" className="h-16 mt-2" alt="Trimrr Logo" />
         </Link>
         <div className="flex gap-4">
+          <div className="flex items-center pr-8">
+          <Link to="/dashboard">
+            <h2 className="font-medium">Dashboard</h2>
+          </Link>
+          </div>
           {!user ? (
             <Button 
             onClick={() => navigate("/auth")}

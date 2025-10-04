@@ -41,6 +41,15 @@ const Login = () => {
   const { loading, error, fn: fnLogin, data } = useFetch(login, formData);
   const { fetchUser } = UrlState();
 
+  const schema = Yup.object().shape({
+    email: Yup.string()
+      .email("Invalid email")
+      .required("Email is required"),
+    password: Yup.string()
+      .min(6, "Password must be at least 6 characters")
+      .required("Password is required"),
+  });
+
   // ✅ Fixed: Remove fetchUser from dependencies and use ref to prevent multiple navigations
   useEffect(() => {
     if (error === null && data && !hasNavigated.current) {
@@ -50,29 +59,50 @@ const Login = () => {
     }
   }, [error, data, navigate, longLink]); // Removed fetchUser
 
-  const handleLogin = async () => {
-    setErrors([]);
-    hasNavigated.current = false; // ✅ Reset on new login attempt
+  // const handleLogin = async () => {
+  //   setErrors([]);
+  //   hasNavigated.current = false; // ✅ Reset on new login attempt
+    
+  //   try {
+  //     const schema = Yup.object().shape({
+  //       email: Yup.string()
+  //         .email("Invalid email")
+  //         .required("Email is required"),
+  //       password: Yup.string()
+  //         .min(6, "Password must be at least 6 characters")
+  //         .required("Password is required"),
+  //     });
+
+  //     await schema.validate(formData, { abortEarly: false });
+  //     await fnLogin();
+  //   } catch (e) {
+  //     const newErrors = {};
+
+  //     e?.inner?.forEach((err) => {
+  //       newErrors[err.path] = err.message;
+  //     });
+
+  //     setErrors(newErrors);
+  //   }
+  // };
+
+  const handleLogin = async (e) => {
+    e.preventDefault();
+    setErrors({});
     
     try {
-      const schema = Yup.object().shape({
-        email: Yup.string()
-          .email("Invalid email")
-          .required("Email is required"),
-        password: Yup.string()
-          .min(6, "Password must be at least 6 characters")
-          .required("Password is required"),
-      });
-
       await schema.validate(formData, { abortEarly: false });
-      await fnLogin();
+      const { error } = await fnLogin();
+      
+      if (!error) {
+        await fetchUser();
+        navigate("/"); // Redirect to home page
+      }
     } catch (e) {
       const newErrors = {};
-
       e?.inner?.forEach((err) => {
         newErrors[err.path] = err.message;
       });
-
       setErrors(newErrors);
     }
   };

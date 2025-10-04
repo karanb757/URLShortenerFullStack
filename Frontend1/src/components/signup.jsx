@@ -13,9 +13,15 @@ import {
 import { Button } from "./ui/button";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { signup } from "@/db/apiAuth";
-import { BeatLoader } from "react-spinners";
 import useFetch from "@/hooks/use-fetch";
 import { UrlState } from "@/context";
+
+const schema = Yup.object().shape({
+  name: Yup.string().required('Name is required'),
+  email: Yup.string().email('Invalid email').required('Email is required'),
+  password: Yup.string().min(6, 'Password must be at least 6 characters').required('Password is required'),
+  profile_pic: Yup.mixed()
+});
 
 const Signup = () => {
   let [searchParams] = useSearchParams();
@@ -70,34 +76,24 @@ const Signup = () => {
     }
   }, [error, data, navigate, longLink]); // Removed fetchUser
 
-  const handleSignup = async () => {
-    setErrors([]);
-    hasNavigated.current = false; // ✅ Reset on new signup attempt
+  const handleSignup = async (e) => {
+    e.preventDefault();
+    setErrors({});
     
     try {
-      const schema = Yup.object().shape({
-        name: Yup.string().required("Name is required"),
-        email: Yup.string()
-          .email("Invalid email")
-          .required("Email is required"),
-        password: Yup.string()
-          .min(6, "Password must be at least 6 characters")
-          .required("Password is required"),
-        profile_pic: Yup.mixed().required("Profile picture is required"),
-      });
-
       await schema.validate(formData, { abortEarly: false });
-      await fnSignup();
-    } catch (error) {
-      const newErrors = {};
-      if (error?.inner) {
-        error.inner.forEach((err) => {
-          newErrors[err.path] = err.message;
-        });
-        setErrors(newErrors);
-      } else {
-        setErrors({ api: error.message });
+      const { error } = await fnSignup();
+      
+      if (!error) {
+        await fetchUser();
+        navigate("/"); // Redirect to home page
       }
+    } catch (e) {
+      const newErrors = {};
+      e?.inner?.forEach((err) => {
+        newErrors[err.path] = err.message;
+      });
+      setErrors(newErrors);
     }
   };
 
