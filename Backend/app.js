@@ -22,10 +22,29 @@ connectDB();
 const allowedOrigins = [
   'http://localhost:5173',
   'http://localhost:5174',
-  'https://url-shortener-full-stack-main.vercel.app',
-  'https://url-shortener-full-stack-vert.vercel.app', // ADD THIS LINE
   process.env.FRONTEND_URL,
 ].filter(Boolean);
+
+app.use(cors({
+  origin: function (origin, callback) {
+    if (!origin) return callback(null, true);
+    
+    // Allow all Vercel preview deployments
+    if (origin.includes('url-shortener-full-stack') && origin.includes('vercel.app')) {
+      return callback(null, true);
+    }
+    
+    if (allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      console.log('Blocked by CORS:', origin);
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+}));
 
 app.use(cors({
   origin: function (origin, callback) {
