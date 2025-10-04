@@ -23,6 +23,7 @@
 //   console.log('Endpoint:', `${API_URL}${endpoint}`);
 //   console.log('Method:', options.method || 'GET');
 //   console.log('Token:', token ? 'Present' : 'Missing');
+//   console.log('Body (before stringify):', options.body);
 
 //   const config = {
 //     method: options.method || 'GET',
@@ -33,26 +34,37 @@
 //     },
 //   };
 
-//   // Only stringify if body exists and is not already a string
+//   // ✅ IMPORTANT: Only stringify if body is NOT already a string
 //   if (options.body) {
 //     if (typeof options.body === 'string') {
 //       config.body = options.body;
 //     } else {
 //       config.body = JSON.stringify(options.body);
 //     }
-//     console.log('Final body being sent:', config.body);
+//     console.log('Stringified body:', config.body);
 //   }
 
 //   try {
 //     const response = await fetch(`${API_URL}${endpoint}`, config);
 //     console.log('Response status:', response.status);
     
+//     // Handle non-JSON responses (like redirects)
+//     const contentType = response.headers.get('content-type');
+//     if (!contentType || !contentType.includes('application/json')) {
+//       if (response.ok) {
+//         return { data: { success: true }, error: null };
+//       }
+//       const text = await response.text();
+//       console.error('Non-JSON response:', text);
+//       throw new Error('Invalid response from server');
+//     }
+
 //     const data = await response.json();
 //     console.log('Response data:', data);
 
 //     if (!response.ok) {
 //       console.error('API Response Error:', data);
-//       throw new Error(data.error || 'Something went wrong');
+//       throw new Error(data.error || data.message || 'Something went wrong');
 //     }
 
 //     console.log('=== API Call Success ===');
@@ -68,30 +80,26 @@
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
 
-// Get token from localStorage
+console.log('API_URL:', API_URL);
+
 const getToken = () => {
   return localStorage.getItem('token');
 };
 
-// Set token in localStorage
 export const setToken = (token) => {
   localStorage.setItem('token', token);
 };
 
-// Remove token from localStorage
 export const removeToken = () => {
   localStorage.removeItem('token');
 };
 
-// Base fetch wrapper
 const apiClient = async (endpoint, options = {}) => {
   const token = getToken();
   
   console.log('=== API Client Call ===');
   console.log('Endpoint:', `${API_URL}${endpoint}`);
   console.log('Method:', options.method || 'GET');
-  console.log('Token:', token ? 'Present' : 'Missing');
-  console.log('Body (before stringify):', options.body);
 
   const config = {
     method: options.method || 'GET',
@@ -102,21 +110,18 @@ const apiClient = async (endpoint, options = {}) => {
     },
   };
 
-  // ✅ IMPORTANT: Only stringify if body is NOT already a string
   if (options.body) {
     if (typeof options.body === 'string') {
       config.body = options.body;
     } else {
       config.body = JSON.stringify(options.body);
     }
-    console.log('Stringified body:', config.body);
   }
 
   try {
     const response = await fetch(`${API_URL}${endpoint}`, config);
     console.log('Response status:', response.status);
     
-    // Handle non-JSON responses (like redirects)
     const contentType = response.headers.get('content-type');
     if (!contentType || !contentType.includes('application/json')) {
       if (response.ok) {
@@ -124,7 +129,7 @@ const apiClient = async (endpoint, options = {}) => {
       }
       const text = await response.text();
       console.error('Non-JSON response:', text);
-      throw new Error('Invalid response from server');
+      throw new Error(text || 'Invalid response from server');
     }
 
     const data = await response.json();
