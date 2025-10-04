@@ -37,7 +37,7 @@ app.use(cors({
     if (!origin) return callback(null, true);
     
     // Allow all Vercel preview deployments (any URL with your project name)
-    if (origin && origin.includes('k07') && origin.includes('vercel.app')) {
+    if (origin && origin.includes('url-shortener-full-stack') && origin.includes('vercel.app')) {
       return callback(null, true);
     }
     
