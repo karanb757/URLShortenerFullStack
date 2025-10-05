@@ -59,6 +59,7 @@
 //       setGeneratedData(data[0]);
 //       setShowSuccessDialog(true);
 //       setLongUrl(""); // Clear input after success
+//       toast.success("Link Generated Successfully!");
 //     }
 //   }, [apiError, data]);
 
@@ -100,6 +101,7 @@
 //     try {
 //       await urlSchema.validate({ longUrl }, { abortEarly: false });
 //       setShowQRDialog(true);
+//       toast.success("QR Code Generated!");
 //     } catch (e) {
 //       const newErrors = {};
 //       e?.inner?.forEach((err) => {
@@ -175,13 +177,6 @@
 //               onSubmit={handleShortenClick}
 //               className="sm:h-14 flex flex-col sm:flex-row gap-2"
 //             >
-//               {/* <Input
-//                 type="url"
-//                 placeholder="Enter your long URL"
-//                 value={longUrl}
-//                 onChange={(e) => setLongUrl(e.target.value)}
-//                 className="h-full flex-1 py-4 px-4 bg-white border-black border-4 sm:w-3/4 "
-//               /> */}
 //               <Input
 //               type="url"
 //               placeholder="Enter your long URL"
@@ -194,9 +189,6 @@
 //               className="h-full bg-[#7F57F1] text-white flex items-center justify-center gap-2"
 //               variant="destructive"
 //               disabled={loading}
-//               onClick={()=>{
-//                 toast.success("Link Generated Successfully !");
-//               }}
 //               >
 //               {loading ? (
 //                 <>
@@ -217,13 +209,6 @@
 //               onSubmit={handleGenerateQR}
 //               className="sm:h-14 flex flex-col sm:flex-row gap-2"
 //             >
-//               {/* <Input 
-//                   type="url" 
-//                   placeholder="Enter URL for QR code" 
-//                   value={longUrl} onChange={(e) => setLongUrl(e.target.value)} 
-//                   className="h-full flex-1 py-4 px-4 bg-white border-black border-4 text-black" /> 
-//               */}
-
 //               <input
 //                 type="url"
 //                 placeholder="Enter URL for QR code"
@@ -235,9 +220,6 @@
 //                 type="submit"
 //                 className="h-full bg-[#7F57F1]"
 //                 variant="destructive"
-//                 onClick={() => {
-//                   toast.success("Qr Code Generated !")
-//                 }}
 //               >
 //                 Generate
 //               </Button>
@@ -390,6 +372,7 @@
 
 // export default LandingPage;
 
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useEffect, useRef, useState } from "react";
@@ -436,7 +419,7 @@ const LandingPage = () => {
       .required("URL is required"),
   });
 
-  // Fetch hook for creating URL - Initialize with empty object
+  // Fetch hook for creating URL
   const {
     loading,
     error: apiError,
@@ -450,7 +433,7 @@ const LandingPage = () => {
       console.log("URL created successfully:", data);
       setGeneratedData(data[0]);
       setShowSuccessDialog(true);
-      setLongUrl(""); // Clear input after success
+      setLongUrl("");
       toast.success("Link Generated Successfully!");
     }
   }, [apiError, data]);
@@ -460,16 +443,13 @@ const LandingPage = () => {
     setErrors({});
 
     try {
-      // Validate URL
       await urlSchema.validate({ longUrl }, { abortEarly: false });
 
-      // Check if user is authenticated
       if (!isAuthenticated) {
         navigate(`/auth?createNew=${encodeURIComponent(longUrl)}`);
         return;
       }
 
-      // Call backend API to create short URL
       await fnCreateUrl({
         title: `Link created on ${new Date().toLocaleDateString()}`,
         longUrl: longUrl,
@@ -503,19 +483,32 @@ const LandingPage = () => {
     }
   };
 
-  const handleCopyLink = () => {
-    const link = generatedData?.custom_url 
-      ? `${generatedData.custom_url}`
-      : `${generatedData?.short_url}`;
+  // Get the proper redirect URL
+  const getRedirectUrl = () => {
+    if (!generatedData) return "";
+    
+    const APP_URL = import.meta.env.VITE_APP_URL || 'http://localhost:3000';
+    const shortCode = generatedData?.custom_url || generatedData?.short_url?.split('/').pop();
+    
+    return `${APP_URL}/${shortCode}`;
+  };
 
-      navigator.clipboard.writeText(link)
+  // Get display URL (what user sees)
+  const getDisplayUrl = () => {
+    if (!generatedData) return "";
+    return generatedData?.custom_url ? generatedData.custom_url : generatedData?.short_url;
+  };
+
+  const handleCopyLink = () => {
+    const link = getRedirectUrl();
+    
+    navigator.clipboard.writeText(link)
       .then(() => {
-        toast("✅ Link copied to clipboard !"); // toast instead of alert
+        toast("✅ Link copied to clipboard!");
       })
       .catch(() => {
-        toast.error("❌ Failed to copy link .");
+        toast.error("❌ Failed to copy link.");
       });
-    
   };
 
   const handleDownloadQR = () => {
@@ -530,9 +523,7 @@ const LandingPage = () => {
   };
 
   const shareToSocial = (platform) => {
-    const link = generatedData?.custom_url 
-      ? `${generatedData.custom_url}`
-      : `${generatedData?.short_url}`;
+    const link = getRedirectUrl();
     const url = encodeURIComponent(link);
 
     const urls = {
@@ -555,6 +546,7 @@ const LandingPage = () => {
         <br />
         <span className="block mt-4 text-[#7F57F1]">Let&apos;s shrink it!</span>
       </h2>
+      
       <div className="w-full md:w-2/4 mb-8 z-10">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <div className="flex justify-center mb-6">
@@ -570,27 +562,24 @@ const LandingPage = () => {
               className="sm:h-14 flex flex-col sm:flex-row gap-2"
             >
               <Input
-              type="url"
-              placeholder="Enter your long URL"
-              value={longUrl}
-              onChange={(e) => setLongUrl(e.target.value)}
-              className="h-14 sm:h-12 md:h-14 w-full py-2 sm:py-3 md:py-4 px-3 sm:px-4 bg-white border-black border-2 sm:border-3 md:border-4 text-xs sm:text-sm md:text-base"
+                type="url"
+                placeholder="Enter your long URL"
+                value={longUrl}
+                onChange={(e) => setLongUrl(e.target.value)}
+                className="h-14 sm:h-12 md:h-14 w-full py-2 sm:py-3 md:py-4 px-3 sm:px-4 bg-white border-black border-2 sm:border-3 md:border-4 text-xs sm:text-sm md:text-base"
               />
               <Button
-              type="submit"
-              className="h-full bg-[#7F57F1] text-white flex items-center justify-center gap-2"
-              variant="destructive"
-              disabled={loading}
+                type="submit"
+                className="h-full bg-[#7F57F1] text-white flex items-center justify-center gap-2"
+                variant="destructive"
+                disabled={loading}
               >
-              {loading ? (
-                <>
+                {loading ? (
                   <AiOutlineLoading3Quarters className="animate-spin h-5 w-5 bg-[#7f57f1]" />
-                </>
-              ) : (
-                "Shorten"
-              )}
-            </Button>
- 
+                ) : (
+                  "Shorten"
+                )}
+              </Button>
             </form>
             {errors.longUrl && <Error message={errors.longUrl} />}
             {apiError && <Error message={apiError.message || apiError} />}
@@ -636,11 +625,15 @@ const LandingPage = () => {
             </p>
 
             <div className="p-4 bg-[#edf2ff] flex flex-col gap-8 rounded-none">
-              <span className="text-xl font-bold text-[#7f57f1] text-center bg-[#edf2ff] mt-4 cursor-pointer break-all">
-              {generatedData?.custom_url
-              ? `${generatedData.custom_url}`
-              : `${generatedData?.short_url}`}
-              </span>
+              {/* FIXED: Made the URL clickable with proper anchor tag */}
+              <a
+                href={getRedirectUrl()}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-xl font-bold text-[#7f57f1] text-center bg-[#edf2ff] mt-4 cursor-pointer break-all hover:underline transition-all"
+              >
+                {getDisplayUrl()}
+              </a>
 
               <div className="flex gap-2">
                 <Button
