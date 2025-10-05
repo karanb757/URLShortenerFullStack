@@ -23,20 +23,20 @@ const Header = () => {
 
   return (
     <>
-      <nav className="flex justify-between items-center px-6">
+      <nav className="flex justify-between items-center px-6 border-b border-[2px] shadow-lg">
         <Link to="/">
           <img src="/www-click.png" className="h-16 mt-2" alt="Trimrr Logo" />
         </Link>
         <div className="flex gap-4">
           <div className="flex items-center pr-8">
           <Link to="/dashboard">
-            <h2 className="font-medium">Dashboard</h2>
+            <h2 className="font-medium text-sm sm:text-sm xl:text-lg transition-transform duration-300 hover:scale-105">Dashboard</h2>
           </Link>
           </div>
           {!user ? (
             <Button 
             onClick={() => navigate("/auth")}
-            className='bg-[#7f57f1] text-white hover:bg-[#6d48d4]'
+            className='bg-[#7f57f1] text-white hover:bg-[#6d48d4] transition-transform duration-300 hover:scale-105'
             variant='desctructive'
             >
               Login
@@ -45,7 +45,7 @@ const Header = () => {
             <DropdownMenu className='bg-white text-black'>
               <DropdownMenuTrigger className="w-12 h-12 rounded-full overflow-hidden">
                 <Avatar>
-                  <AvatarImage src={user?.user_metadata?.profile_pic}/>
+                  <AvatarImage src={user?.user_metadata?.profile_pic} className="transition-transform duration-300 hover:scale-105"/>
                   <AvatarFallback>PA</AvatarFallback>
                 </Avatar>
               </DropdownMenuTrigger>
