@@ -36,12 +36,10 @@ npm install
 ### 2. Configure Environment Variables
 Create `.env` file in backend root:
 ```env
-MONGO_URL=mongodb://localhost:27017/url-shortener
 APP_URL=http://localhost:3000/
 FRONTEND_URL=http://localhost:5173
 JWT_SECRET=your_super_secret_jwt_key_change_in_production
-PORT=3000
-```
+
 
 ### 3. Create Required Directories
 ```bash
