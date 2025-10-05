@@ -4,77 +4,74 @@
 // import { deleteUrl } from "@/db/apiUrls";
 
 // const LinkCard = ({ url = {}, fetchUrls }) => {
+//   const { loading: loadingDelete, fn: fnDelete } = useFetch(deleteUrl, url.id);
+
 //   const downloadImage = () => {
 //     const imageUrl = url?.qr;
 //     const fileName = url?.title || "qr-code";
 
-//     // Create an anchor element
 //     const anchor = document.createElement("a");
 //     anchor.href = imageUrl;
 //     anchor.download = fileName;
-
-//     // Append the anchor to the body
 //     document.body.appendChild(anchor);
-
-//     // Trigger the download by simulating a click event
 //     anchor.click();
-
-//     // Remove the anchor from the document
 //     document.body.removeChild(anchor);
 //   };
 
-//   const { loading: loadingDelete, fn: fnDelete } = useFetch(deleteUrl, url.id);
-
-//   // Determine the display URL
-//   const displayUrl = url?.custom_url 
-//     ? `${url.custom_url}` 
-//     : `${url.short_url}`;
-
-//   const copyUrl = url?.custom_url || url?.short_url;
+//   // Determine URLs
+//   const displayUrl = url?.custom_url ? url.custom_url : url.short_url;
+//   const copyUrl = displayUrl;
 
 //   return (
-//     <div className="flex flex-col md:flex-row gap-5 border p-4 rounded-lg">
+//     <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 border p-4 sm:p-6 rounded-lg bg-white shadow-sm hover:shadow-md transition-shadow duration-300">
+//       {/* QR Image */}
 //       <img
 //         src={url?.qr}
-//         className="h-24 w-24 object-contain ring ring-[#7f57f1] self-start mt-2"
+//         className="h-28 w-28 sm:h-24 sm:w-24 object-contain ring ring-[#7f57f1] rounded-md mx-auto sm:mx-0"
 //         alt="qr code"
 //       />
-//       <Link to={`/link/${url?.id}`} className="flex flex-col flex-1">
-//         <div className="flex flex-col ">
-//           <span className="text-3xl font-extrabold cursor-pointer">
-//             {url?.title}
-//           </span>
-//           <span className="text-2xl text-[#7f57f1] font-bold hover:underline cursor-pointer">
-//             {displayUrl}
-//           </span>
-//           <span className="flex items-center gap-1 hover:underline cursor-pointer">
-//             {url?.original_url}
-//           </span>
 
-//           <span className="flex items-end font-extralight text-sm flex-1">
-//             {new Date(url?.created_at).toLocaleString()}
-//           </span>
-//         </div>
+//       {/* URL Details */}
+//       <Link to={`/link/${url?.id}`} className="flex flex-col flex-1 gap-1 text-center sm:text-left">
+//         <span className="text-2xl sm:text-3xl font-extrabold break-words">
+//           {url?.title}
+//         </span>
+
+//         <span className="text-lg sm:text-2xl text-[#7f57f1] font-bold break-all hover:underline">
+//           {displayUrl}
+//         </span>
+
+//         <span className="text-sm sm:text-base text-gray-600 break-all hover:underline">
+//           {url?.original_url}
+//         </span>
+
+//         <span className="text-xs sm:text-sm text-gray-400 mt-1">
+//           {new Date(url?.created_at).toLocaleString()}
+//         </span>
 //       </Link>
-//       <div className="flex gap-2">
+
+//       {/* Action Buttons */}
+//       <div className="flex justify-center sm:justify-start gap-3 mt-2 sm:mt-0">
 //         <button
-//           className="bg-white hover:bg-white"
-//           onClick={() =>
-//             navigator.clipboard.writeText(`${copyUrl}`)
-//           }
+//           className="p-2 rounded-full "
+//           onClick={() => navigator.clipboard.writeText(copyUrl)}
 //         >
-//           <Copy />
-//         </button>
-
-//         <button onClick={downloadImage}>
-//           <Download />
+//           <Copy className="w-4 h-4 hover:scale-110 transition-transform duration-300 ease-out" />
 //         </button>
 
 //         <button
+//           className="p-2 rounded-full transition"
+//           onClick={downloadImage}
+//         >
+//           <Download className="w-4 h-4 hover:scale-110 transition-transform duration-300 ease-out" />
+//         </button>
+
+//         <button
+//           className="p-2 rounded-full transition disabled:opacity-50"
 //           onClick={() => fnDelete().then(() => fetchUrls())}
 //           disabled={loadingDelete}
 //         >
-//           <Trash />
+//           <Trash className="w-4 h-4 hover:scale-110 transition-transform duration-300 ease-out" />
 //         </button>
 //       </div>
 //     </div>
@@ -82,6 +79,8 @@
 // };
 
 // export default LinkCard;
+
+
 
 
 import { Copy, Download, Trash } from "lucide-react";
@@ -104,10 +103,18 @@ const LinkCard = ({ url = {}, fetchUrls }) => {
     document.body.removeChild(anchor);
   };
 
-  // Determine URLs
+  // Get the backend URL for actual redirects
+  const APP_URL = import.meta.env.VITE_APP_URL || 'http://localhost:3000';
+  
+  // Determine the short code (without the full URL)
+  const shortCode = url?.custom_url || url?.short_url?.split('/').pop();
+  
+  // Full redirect URL that points to backend
+  const redirectUrl = `${APP_URL}/${shortCode}`;
+  
+  // Display URL (for showing to user)
   const displayUrl = url?.custom_url ? url.custom_url : url.short_url;
-  const copyUrl = displayUrl;
-
+  
   return (
     <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 border p-4 sm:p-6 rounded-lg bg-white shadow-sm hover:shadow-md transition-shadow duration-300">
       {/* QR Image */}
@@ -118,29 +125,43 @@ const LinkCard = ({ url = {}, fetchUrls }) => {
       />
 
       {/* URL Details */}
-      <Link to={`/link/${url?.id}`} className="flex flex-col flex-1 gap-1 text-center sm:text-left">
-        <span className="text-2xl sm:text-3xl font-extrabold break-words">
+      <div className="flex flex-col flex-1 gap-1 text-center sm:text-left">
+        {/* Title - Link to details page */}
+        <Link to={`/link/${url?.id}`} className="text-2xl sm:text-3xl font-extrabold break-words hover:underline">
           {url?.title}
-        </span>
+        </Link>
 
-        <span className="text-lg sm:text-2xl text-[#7f57f1] font-bold break-all hover:underline">
+        {/* Shortened URL - Use regular anchor tag for proper redirects */}
+        <a
+          href={redirectUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-lg sm:text-2xl text-[#7f57f1] font-bold break-all hover:underline"
+        >
           {displayUrl}
-        </span>
+        </a>
 
-        <span className="text-sm sm:text-base text-gray-600 break-all hover:underline">
+        {/* Original URL */}
+        <a
+          href={url?.original_url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-sm sm:text-base text-gray-600 break-all hover:underline"
+        >
           {url?.original_url}
-        </span>
+        </a>
 
         <span className="text-xs sm:text-sm text-gray-400 mt-1">
           {new Date(url?.created_at).toLocaleString()}
         </span>
-      </Link>
+      </div>
 
       {/* Action Buttons */}
       <div className="flex justify-center sm:justify-start gap-3 mt-2 sm:mt-0">
         <button
-          className="p-2 rounded-full "
-          onClick={() => navigator.clipboard.writeText(copyUrl)}
+          className="p-2 rounded-full"
+          onClick={() => navigator.clipboard.writeText(redirectUrl)}
+          title="Copy link"
         >
           <Copy className="w-4 h-4 hover:scale-110 transition-transform duration-300 ease-out" />
         </button>
@@ -148,6 +169,7 @@ const LinkCard = ({ url = {}, fetchUrls }) => {
         <button
           className="p-2 rounded-full transition"
           onClick={downloadImage}
+          title="Download QR"
         >
           <Download className="w-4 h-4 hover:scale-110 transition-transform duration-300 ease-out" />
         </button>
@@ -156,6 +178,7 @@ const LinkCard = ({ url = {}, fetchUrls }) => {
           className="p-2 rounded-full transition disabled:opacity-50"
           onClick={() => fnDelete().then(() => fetchUrls())}
           disabled={loadingDelete}
+          title="Delete link"
         >
           <Trash className="w-4 h-4 hover:scale-110 transition-transform duration-300 ease-out" />
         </button>
